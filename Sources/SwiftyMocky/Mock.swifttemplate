@@ -1604,12 +1604,12 @@ class VariableWrapper {
     }
 }
 _%>
-func generate(type: Type, methodRegistrar: MethodRegistrar, subscriptRegistrar: SubscriptRegistrar) async -> String {
+func generate(type: Type, idx: Int, methodRegistrar: MethodRegistrar, subscriptRegistrar: SubscriptRegistrar) async -> (Int, String) {
     var sourceryBuffer: String = ""
     var mockedCount = 0
     let autoMockable: Bool = type.inheritedTypes.contains("AutoMockable") || type.annotations["AutoMockable"] != nil
     let protocolToDecorate = types.protocols.first(where: { $0.name == (type.annotations["mock"] as? String) })
-    guard let aProtocol = autoMockable ? type : protocolToDecorate else { return sourceryBuffer }
+    guard let aProtocol = autoMockable ? type : protocolToDecorate else { return (idx, sourceryBuffer) }
     mockedCount += 1
     var current = Current()
     let associatedTypes: [String]? = Helpers.extractAssociatedTypes(from: aProtocol)
@@ -1628,11 +1628,34 @@ func generate(type: Type, methodRegistrar: MethodRegistrar, subscriptRegistrar: 
     let allMethodsForMethodType = uniquesWithoutGenericConstraints(methods: aProtocol.allMethods.filter({ !$0.isStatic }))
     let allStaticMethods = uniques(methods: aProtocol.allMethods.filter({ $0.isStatic && !$0.isInitializer }))
     let allStaticMethodsForMethodType = uniquesWithoutGenericConstraints(methods: aProtocol.allMethods.filter({ $0.isStatic }))
-    let conformsToStaticMock = !allStaticMethods.isEmpty || !allStaticVariables.isEmpty-%><%_ -%><%_ -%>
+    let conformsToStaticMock = !allStaticMethods.isEmpty || !allStaticVariables.isEmpty
+    let testRegisterable = projectImports(argument).contains("import QDependencyInjectionTestToolkit") && (associatedTypes ?? []).isEmpty && type.annotations["ignoreTestRegisterable"] == nil
+-%><%_ -%><%_ -%>
+// sourcery:file:Mock+<%= type.name %>.generated.swift
+// MARK: SwiftLint rules
+<%_ for rule in swiftLintRules(argument) { -%>
+    <%_ %><%= rule %>
+<%_ } -%>
+//swiftlint:disable all
+
+// MARK: Imports
+
+import SwiftyMocky
+import XCTest
+<%# ================================================== IMPORTS -%><%_ -%>
+    <%_ for projectImport in projectImports(argument) { -%>
+        <%_ %><%= projectImport %>
+    <%_ } -%>
+    <%# ============================ IMPORTS InAPP (aggregated argument) -%><%_ -%>
+    <%_ if let swiftyMockyArgs = argument["swiftyMocky"] as? [String: Any] { -%>
+        <%_ for projectImport in projectImports(swiftyMockyArgs) { -%>
+            <%_ %><%= projectImport %>
+        <%_ } -%>
+    <%_ } -%>
 <%_ if autoMockable { -%>
 // MARK: - <%= type.name %>
 <%= attributes %>
-<%= accessModifier %> class <%= type.name %><%= mockTypeName %><%= genericTypesModifier %>:<%= inheritFromNSObject ? " NSObject," : "" %> <%= type.name %>, Mock<%= conformsToStaticMock ? ", StaticMock" : "" %><%= genericTypesConstraints %> {
+<%= accessModifier %> class <%= type.name %><%= mockTypeName %><%= genericTypesModifier %>:<%= inheritFromNSObject ? " NSObject, " : "" %> <%= type.name %>,<%_ if testRegisterable { -%> TestRegisterable<%_ } else { -%> Mock<%_ } -%><%= conformsToStaticMock ? ", StaticMock" : "" %><%= genericTypesConstraints %> {
     public init(sequencing sequencingPolicy: SequencingPolicy = .lastWrittenResolvedFirst, stubbing stubbingPolicy: StubbingPolicy = .wrap, file: StaticString = #file, line: UInt = #line) {
         SwiftyMockyTestObserver.setup()
         self.sequencingPolicy = sequencingPolicy
@@ -1641,8 +1664,16 @@ func generate(type: Type, methodRegistrar: MethodRegistrar, subscriptRegistrar: 
         self.line = line
     }
 
+    <%_ if testRegisterable { -%>
+    public static func register(in dependencyRegistrator: TestDependencyRegistrator) -> Self {
+        dependencyRegistrator.retrieveOrRegister(
+            mock: <%= type.name %><%= mockTypeName %>(),
+            type: <%= type.name %>.self
+        ) as! Self
+    }
+
+    <%_ } -%>
 <%_ } else { -%>
-// sourcery:inline:auto:<%= type.name %>.autoMocked
 <%_ } -%>
 <%# ================================================== MAIN CLASS -%><%_ -%>
   <%# ================================================== MOCK INTERNALS -%><%_ -%>
@@ -2123,7 +2154,7 @@ func generate(type: Type, methodRegistrar: MethodRegistrar, subscriptRegistrar: 
 <%_ } else { -%>
 <%_ } -%>
 // sourcery:end
-<%_ return sourceryBuffer -%>
+<%_ return (idx, sourceryBuffer) -%>
 <%_ } -%>
 
 <%# ================================================== SETUP -%><%_ -%>
@@ -2134,19 +2165,17 @@ func generate(type: Type, methodRegistrar: MethodRegistrar, subscriptRegistrar: 
 
 <%_
 
-let content = try await withThrowingTaskGroup(of: String.self) { group in
-    for type in all {
+let content = try await withThrowingTaskGroup(of: (Int, String).self) { group in
+    for (idx, type) in all.enumerated() {
         group.addTask {
-            let methodRegistrar = MethodRegistrar()
-            let subscriptRegistrar = SubscriptRegistrar()
-            return await generate(type: type, methodRegistrar: methodRegistrar, subscriptRegistrar: subscriptRegistrar)
+            await generate(type: type, idx: idx, methodRegistrar: MethodRegistrar(), subscriptRegistrar: SubscriptRegistrar())
         }
     }
-    var fullContent = ""
-    for try await content in group {
-        fullContent.append(content)
+    var fullContent = [String](repeating: "", count: all.count)
+    for try await (idx, content) in group {
+        fullContent.insert(content, at: idx)
     }
-    return fullContent
+    return fullContent.joined(separator: "")
 }
 if content.isEmpty {
 -%>
