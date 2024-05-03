@@ -234,3 +234,4 @@ class SubscriptWrapper {
         return !set ? params : "\(params), \(nestedType).value(newValue)\(postfix)"
     }
 }
+

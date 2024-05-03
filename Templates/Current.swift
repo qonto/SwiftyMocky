@@ -1,4 +1,4 @@
-class Current {
-    static var selfType: String = "Self"
-    static var accessModifier: String = "open"
+struct Current {
+    var selfType: String = "Self"
+    var accessModifier: String = "open"
 }

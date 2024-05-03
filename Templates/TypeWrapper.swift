@@ -127,3 +127,4 @@ class TypeWrapper {
         return "\(vPref)\(replacingSelf())\(vSuff)"
     }
 }
+

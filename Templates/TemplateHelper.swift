@@ -1,7 +1,3 @@
-struct Current {
-    var selfType: String = "Self"
-    var accessModifier: String = "open"
-}
 // Collision management
 func areThereCollisions(between methods: [MethodWrapper]) -> Bool {
     let givenSet = Set<String>(methods.map({ $0.givenConstructorName(prefix: "") }))
@@ -144,3 +140,4 @@ func propertyRegister(_ variable: SourceryRuntime.Variable, methodRegistrar: Met
     guard !wrapper.readonly else { return }
     methodRegistrar.register(wrapper.propertyCaseSetName,wrapper.propertyCaseSetName,wrapper.propertyCaseGetName)
 }
+

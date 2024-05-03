@@ -116,3 +116,4 @@ class VariableWrapper {
         return "return \(prefix)Given(method: .\(propertyCaseGetName), products: defaultValue.map({ StubProduct.return($0 as Any) }))"
     }
 }
+
