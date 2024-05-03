@@ -1,9 +1,9 @@
-// Generated using Sourcery 1.8.0 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.4 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 
-// Generated with SwiftyMocky 4.2.0
-// Required Sourcery: 1.8.0
+// Generated with SwiftyMocky 4.2.1
+// Required Sourcery: 2.2.4
 
 
 import SwiftyMocky
@@ -11,6 +11,7 @@ import XCTest
 import Foundation
 import PathKit
 @testable import SwiftyMockyCLICore
+
 
 
 // MARK: - GenerationCommand
@@ -311,6 +312,7 @@ open class GenerationCommandMock: GenerationCommand, Mock {
     }
 }
 
+// sourcery:end
 // MARK: - InstanceFactory
 
 open class InstanceFactoryMock: InstanceFactory, Mock {
@@ -546,3 +548,4 @@ open class InstanceFactoryMock: InstanceFactory, Mock {
     }
 }
 
+// sourcery:end
