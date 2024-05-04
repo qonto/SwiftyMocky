@@ -1,6 +1,6 @@
 EXECUTABLE_NAME = swiftymocky
 REPO = https://github.com/MakeAWishFoundation/SwiftyMocky
-VERSION = 4.2.0
+VERSION = 4.2.1
 
 PREFIX = /usr/local
 INSTALL_PATH = $(PREFIX)/bin/$(EXECUTABLE_NAME)
