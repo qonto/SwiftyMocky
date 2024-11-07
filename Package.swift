@@ -1,4 +1,4 @@
-// swift-tools-version:4.2
+// swift-tools-version:5.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -8,6 +8,7 @@ let package = Package(
     products: [
         // XCTest Runtime libraries
         .library(name: "SwiftyMocky", targets: ["SwiftyMocky"]),
+        .library(name: "SwiftyMockyXCTest", targets: ["SwiftyMockyXCTest"]),
         .library(name: "SwiftyPrototype", targets: ["SwiftyPrototype"]),
         // CLI Executable
         .executable(name: "swiftymocky", targets: ["SwiftyMockyCLI"]),
@@ -24,8 +25,13 @@ let package = Package(
         // XCTest Runtime libraries
         .target(
             name: "SwiftyMocky",
-            path: "./Sources/SwiftyMocky",
-            exclude: ["Mock.swifttemplate"]
+            path: "./Sources/SwiftyMocky"
+        ),
+        .target(
+            name: "SwiftyMockyXCTest",
+            dependencies: ["SwiftyMocky"],
+            path: "./Sources/XCTest",
+            linkerSettings: [.linkedFramework("XCTest")]
         ),
         .target(
             name: "SwiftyPrototype",
