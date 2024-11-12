@@ -1,4 +1,5 @@
 import Foundation
+import SwiftyMocky
 #if canImport(XCTest)
 import XCTest
 
