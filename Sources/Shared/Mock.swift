@@ -132,6 +132,8 @@ public protocol StaticMock: AnyObject {
     static func resetMock(_ scopes: MockScope...)
 }
 
+/// Every mock, that stubs Actors, should adopt **ActorMock** protocol.
+/// It defines base Mock structure and features.
 @available(iOS 13.0, *)
 public protocol ActorMock: Actor {
     /// Stubbed method and property type
