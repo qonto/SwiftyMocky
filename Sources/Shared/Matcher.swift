@@ -11,7 +11,7 @@ public final class Matcher: @unchecked Sendable {
     /// [Internal] line where comparison faiure should be recorded
     private var line: UInt?
     /// [Internal] Lock for thread-safe access
-    private let lock = NSLock()
+    private let lock = NSRecursiveLock()
     /// [Internal] matcher fatal error handler
     public static var fatalErrorHandler: (String, StaticString, UInt) -> Void = { _,_,_ in}
 
